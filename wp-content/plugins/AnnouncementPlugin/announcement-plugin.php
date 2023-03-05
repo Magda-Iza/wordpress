@@ -67,6 +67,21 @@ function delete_announcement($id_announcement) {
     $wpdb->delete($table_name, array('id' => $id_announcement));
 }
 
+function update_announcement($id_announcement, $name, $content) {
+    global $wpdb;
+    global $table_name;
+
+    $data = array(
+        'id' => $id_announcement,
+        'name' => $name,
+        'content' => $content,
+        'date_post' => date('Ymd')
+    );
+
+    // Execute the insert query
+    $wpdb->replace($table_name, $data);
+}
+
 function ap_admin_page() {
     // get _POST variable from globals
     global $_POST;
@@ -77,7 +92,8 @@ function ap_admin_page() {
     // Get global table name
     global $table_name;
 
-    $announcment_type = 'create';
+    $announcment_id = '';
+    $announcment_type = 'Create';
     $announcment_name = '';
     $announcment_content = '';
 
@@ -92,16 +108,19 @@ function ap_admin_page() {
 
     // create new announcement
     if(isset($_POST['ap_announcment_create'])) {
-        if($_POST['ap_announcment_create'] == 'Y') {
+        if($_POST['ap_announcment_create'] == 'Create') {
             // Define the data to insert
             $data = array(
-                'name' => $_POST['announcment_name'],
+                'name' => $_POST['ap_announcment_name'],
                 'content' => $_POST['my_editor_id'],
                 'date_post' => date('Ymd')
             );
 
             // Execute the insert query
             $wpdb->insert($table_name, $data);
+        }
+        else {
+            update_announcement($_POST['ap_announcment_id'], $_POST['ap_announcment_name'], $_POST['my_editor_id']);
         }
     }
 
@@ -110,17 +129,17 @@ function ap_admin_page() {
         delete_announcement($_POST['delete_change']);
     }
 
-    // delete announcement
+    // prepare to edit announcement
     if(isset($_POST['edit_change'])) {
+        $announcments = get_announcements();
 
         foreach($announcments as $row) {
             if ($row['id'] == $_POST['edit_change']) {
-                $announcment_type =  'edit';
+                $announcment_type =  'Edit';
                 $announcment_name = $row['name'];
-                $announcment_content = '';
+                $announcment_content = $row['content'];
+                $announcment_id = $row['id'];
             }
-            $row['name']
-            <$row['date_post']
 
         }
 
@@ -150,12 +169,13 @@ function ap_admin_page() {
 
         <br>
         <form name="announcment_create_form" method="post">
-            <h3>Create new announcment</h3>
+            <h3><?php echo $announcment_type ?> announcment</h3>
             <form method="POST">
-                <input type="hidden" name="ap_announcment_create" value="Y">
+                <input type="hidden" name="ap_announcment_create" value="<?php echo $announcment_type ?>">
+                <input type="hidden" name="ap_announcment_id" value="<?php echo $announcment_id ?>">
 
                 <p class="form_text">Announcment name:
-                    <input type="text" name="announcment_name" required>
+                    <input type="text" name="ap_announcment_name" value="<?php echo $announcment_name ?>" required>
                 </p>
                 
                 <?php
@@ -167,9 +187,9 @@ function ap_admin_page() {
                     );
 
                     // Output the editor
-                    wp_editor('', 'my_editor_id', $editor_args);
+                    wp_editor($announcment_content, 'my_editor_id', $editor_args);
                 ?>
-                <input type="submit" name="submit" value="Create">
+                <input type="submit" name="submit" value="Submit">
             </form>
         </form>
 
