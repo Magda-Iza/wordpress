@@ -16,6 +16,8 @@ function naph_admin_actions_register_menu() {
     add_options_page("Newly Added Post Highliter", "New Post Highliter", 'manage_options', "naph", "naph_admin_page");
 }
 
+add_action('admin_menu', 'naph_admin_actions_register_menu');
+
 function naph_admin_page() {
     // get _POST variable from globals
     global $_POST;
@@ -46,8 +48,6 @@ function naph_admin_page() {
     </div>
 <?php
 }
-
-add_action('admin_menu', 'naph_admin_actions_register_menu');
 
 function naph_mark_new_post_title($content, $id) {
     //read post publish date
