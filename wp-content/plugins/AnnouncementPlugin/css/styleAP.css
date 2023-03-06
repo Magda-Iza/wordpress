@@ -2,12 +2,11 @@
     font-size: 14px;
 }
 
-strong {
-   font-size: 4em;
-}
-
 .ap_table {
-    /*width: 50%;*/
+    background-color: white;
+    border-color: #767676;
+    border-radius: 5px;
+    font-size: 14px;
 }
 
 .btn_ap {
@@ -27,6 +26,7 @@ strong {
 th, td {
     text-align: left;
     padding: 10px;
+    font-size: 14px;
 }
 
 .centered_btn {
@@ -36,4 +36,9 @@ th, td {
 
 .btn_change_days {
     margin-left: 40px;
+}
+
+.announcement {
+    padding: 40px;
+    background-color: #c2c1c1;
 }

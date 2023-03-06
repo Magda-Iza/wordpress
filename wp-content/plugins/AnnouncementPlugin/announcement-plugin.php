@@ -39,7 +39,7 @@ function create_announcements_table() {
         $query = "CREATE TABLE $table_name (
         id int(11) NOT NULL AUTO_INCREMENT,
         name varchar(255) NOT NULL,
-        content text,
+        content varchar(1000),
         date_post date,
         PRIMARY KEY (id)
         );";
@@ -91,6 +91,8 @@ function ap_admin_page() {
 
     // Get global table name
     global $table_name;
+
+    create_announcements_table();
 
     $announcment_id = '';
     $announcment_type = 'Create';
@@ -144,7 +146,7 @@ function ap_admin_page() {
             if ($row['id'] == $_POST['edit_change']) {
                 $announcment_type =  'Edit';
                 $announcment_name = $row['name'];
-                $announcment_content = $row['content'];
+                $announcment_content = stripslashes($row['content']);
                 $announcment_id = $row['id'];
             }
         }
@@ -153,9 +155,6 @@ function ap_admin_page() {
     // read current option value
     $apDays = get_option('ap_days');
     $announcments = get_announcements();
-
-//    // Get the current post's content
-//    $content = get_post_field('post_content', $post_id);
 
     //display admin page
     ?>
@@ -243,6 +242,51 @@ function ap_admin_page() {
     </div>
     <?php
 }
+
+//function add_random_current_announcment($title) {
+//    $announcements = get_announcements();
+//    $current_announcements = array();
+//
+//    //get current date
+//    $now = date('Ymd');
+//    //get setting for how long post is a new post
+//    $apDays = get_option('ap_days');
+//
+//    foreach($announcements as $row) {
+//        $date = get_the_date('Ymd', $row['date_post']);
+//
+//        //generate proper post title
+//        if($now - $date <= $apDays) {
+////            $current_announcements[] = $row;
+//            $current_announcements[] = $row;
+//        }
+//    }
+//
+////    echo $current_announcements[rand(0, count($current_announcements) - 1)]['content'];
+//    return $title. ' – jakaś stała treść :)';
+//}
+//
+//add_action('the_title', 'add_random_current_announcment');
+
+function ap_announcement_managment($content){
+
+    // czy to jest post
+    if ( is_single() ) {
+        $anon_array = get_announcements();
+        shuffle( $anon_array );
+
+        if (count($anon_array) != 0) {
+            //        $content = $anon_array[0]['content'] . $content;
+            $ann = $anon_array[0]['content'];
+            $ann = stripslashes($ann);
+            $content = $ann.$content;
+        }
+    }
+
+    return $content;
+}
+
+add_filter('the_content', "ap_announcement_managment");
 
 function ap_register_styles() {
     //register style
