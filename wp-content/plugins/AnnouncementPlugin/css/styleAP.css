@@ -1,0 +1,39 @@
+.form_text {
+    font-size: 14px;
+}
+
+strong {
+   font-size: 4em;
+}
+
+.ap_table {
+    /*width: 50%;*/
+}
+
+.btn_ap {
+    background-color: #2271b1;
+    color: white;
+    border-color: #2271b1;
+    padding: 5px 20px;
+    border-radius: 4px;
+}
+
+.btn_ap:hover {
+    background-color: #135e96;
+    border-color: #135e96;
+    cursor: pointer;
+}
+
+th, td {
+    text-align: left;
+    padding: 10px;
+}
+
+.centered_btn {
+    text-align: center;
+    padding: 20px;
+}
+
+.btn_change_days {
+    margin-left: 40px;
+}

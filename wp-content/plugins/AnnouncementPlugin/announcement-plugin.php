@@ -101,6 +101,7 @@ function ap_admin_page() {
     if(isset($_POST['ap_do_change'])) {
         if($_POST['ap_do_change'] == 'Y') {
             $apDays = $_POST['ap_days'];
+
             echo '<div class="notice notice-success is dismissible"><p>Settings saved.</p></div>';
             update_option('ap_days', $apDays);
         }
@@ -118,15 +119,21 @@ function ap_admin_page() {
 
             // Execute the insert query
             $wpdb->insert($table_name, $data);
+
+            echo '<div class="notice notice-success is dismissible"><p>Announcment created.</p></div>';
         }
         else {
             update_announcement($_POST['ap_announcment_id'], $_POST['ap_announcment_name'], $_POST['my_editor_id']);
+
+            echo '<div class="notice notice-success is dismissible"><p>Announcment edited.</p></div>';
         }
     }
 
     // delete announcement
     if(isset($_POST['delete_change'])) {
         delete_announcement($_POST['delete_change']);
+
+        echo '<div class="notice notice-success is dismissible"><p>Announcment deleted.</p></div>';
     }
 
     // prepare to edit announcement
@@ -140,9 +147,7 @@ function ap_admin_page() {
                 $announcment_content = $row['content'];
                 $announcment_id = $row['id'];
             }
-
         }
-
     }
 
     // read current option value
@@ -162,8 +167,10 @@ function ap_admin_page() {
         <form name="ap_form" method="post">
             <input type="hidden" name="ap_do_change" value="Y">
             <p class="form_text">Announcment is considered current for
-                <input type="number" name="ap_days" min="0" max="30" value="<?php echo $apDays ?>"> days
-                <span class="submit"><input type="submit" value="Submit"></span>
+                <input type="number" name="ap_days" min="0" max="30" value="<?php echo $apDays ?>"> days.
+                <span class="submit">
+                    <input type="submit" value="Save changes" class="btn_ap btn_change_days">
+                </span>
             </p>
         </form>
 
@@ -175,7 +182,7 @@ function ap_admin_page() {
                 <input type="hidden" name="ap_announcment_id" value="<?php echo $announcment_id ?>">
 
                 <p class="form_text">Announcment name:
-                    <input type="text" name="ap_announcment_name" value="<?php echo $announcment_name ?>" required>
+                    <input type="text" name="ap_announcment_name" value="<?php echo $announcment_name ?>" size="100" required>
                 </p>
                 
                 <?php
@@ -189,7 +196,9 @@ function ap_admin_page() {
                     // Output the editor
                     wp_editor($announcment_content, 'my_editor_id', $editor_args);
                 ?>
-                <input type="submit" name="submit" value="Submit">
+                <div class="centered_btn">
+                    <input type="submit" name="submit" value="Submit" class="btn_ap">
+                </div>
             </form>
         </form>
 
@@ -216,13 +225,13 @@ function ap_admin_page() {
                             <td>
                                 <form name="edit_form" method="post">
                                     <input type="hidden" name="edit_change" value="<?php echo $row['id'] ?>">
-                                    <span class="submit"><input type="submit" value="Edit"></span>
+                                    <span class="submit"><input type="submit" value="Edit" class="btn_ap"></span>
                                 </form>
                             </td>
                             <td>
                                 <form name="delete_form" method="post">
                                     <input type="hidden" name="delete_change" value="<?php echo $row['id'] ?>">
-                                    <span class="submit"><input type="submit" value="Delete"></span>
+                                    <span class="submit"><input type="submit" value="Delete" class="btn_ap"></span>
                                 </form>
                             </td>
                         </tr>
@@ -237,7 +246,7 @@ function ap_admin_page() {
 
 function ap_register_styles() {
     //register style
-    wp_register_style('ap_styles', plugins_url('/css/style.css', __FILE__));
+    wp_register_style('ap_styles', plugins_url('/css/styleAP.css', __FILE__));
     //enable style (load in meta of html)
     wp_enqueue_style('ap_styles');
 }
