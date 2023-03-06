@@ -243,48 +243,76 @@ function ap_admin_page() {
     <?php
 }
 
-//function add_random_current_announcment($title) {
-//    $announcements = get_announcements();
-//    $current_announcements = array();
-//
-//    //get current date
-//    $now = date('Ymd');
-//    //get setting for how long post is a new post
-//    $apDays = get_option('ap_days');
-//
-//    foreach($announcements as $row) {
-//        $date = get_the_date('Ymd', $row['date_post']);
-//
-//        //generate proper post title
-//        if($now - $date <= $apDays) {
-////            $current_announcements[] = $row;
-//            $current_announcements[] = $row;
-//        }
-//    }
-//
-////    echo $current_announcements[rand(0, count($current_announcements) - 1)]['content'];
-//    return $title. ' – jakaś stała treść :)';
-//}
-//
-//add_action('the_title', 'add_random_current_announcment');
+function add_random_current_announcment($title) {
+    $announcements = get_announcements();
+    $current_announcements = array();
 
-function ap_announcement_managment($content){
+    //get current date
+    $now = date('Ymd');
+    //get setting for how long post is a new post
+    $apDays = get_option('ap_days');
 
-    // czy to jest post
+    foreach($announcements as $row) {
+        $date = get_the_date('Ymd', $row['date_post']);
+        $current_announcements;
+
+        //generate proper post title
+        if($now - $date <= $apDays) {
+            $current_announcements[] = $row;
+        }
+    }
+}
+
+function ap_announcement_managment($content) {
+
     if ( is_single() ) {
-        $anon_array = get_announcements();
-        shuffle( $anon_array );
+        $announcements = get_announcements();
+        $current_announcements = array();
 
-        if (count($anon_array) != 0) {
-            //        $content = $anon_array[0]['content'] . $content;
-            $ann = $anon_array[0]['content'];
-            $ann = stripslashes($ann);
-            $content = $ann.$content;
+        //get current date
+        $now = date('Ymd');
+        //get setting for how long post is a new post
+        $apDays = get_option('ap_days');
+
+        foreach($announcements as $row) {
+//            $date = get_the_date('Y-m-d', $row['date_post']);
+            $date = date('Ymd', strtotime($row['date_post']));
+            $content = $date . $content;
+
+            //generate proper post title
+            if($now - $date <= $apDays) {
+                $current_announcements[] = $row;
+            }
+        }
+
+        shuffle( $current_announcements );
+
+        if (count($current_announcements) != 0) {
+            $announcement_drawn = $current_announcements[0]['content'];
+            $announcement_drawn= stripslashes($announcement_drawn);
+            $content = $announcement_drawn.$content;
         }
     }
 
     return $content;
 }
+
+//function ap_announcement_managment($content) {
+//
+//    if ( is_single() ) {
+//        $announcements = get_announcements();
+//        shuffle( $announcements );
+//
+//        if (count($announcements) != 0) {
+//            $announcement_drawn = $announcements[0]['content'];
+//            $announcement_drawn= stripslashes($announcement_drawn);
+//            $content = $announcement_drawn.$content;
+//        }
+//    }
+//
+//    return $content;
+//}
+
 
 add_filter('the_content', "ap_announcement_managment");
 
