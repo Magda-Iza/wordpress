@@ -39,6 +39,6 @@ th, td {
 }
 
 .announcement {
-    padding: 40px;
-    background-color: #c2c1c1;
+    width: 80%;
+    text-align: center;
 }

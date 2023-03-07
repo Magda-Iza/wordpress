@@ -12,7 +12,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 
-// Define the table name
+// Create name for table with announcements
 $table_name = $wpdb->prefix . 'announcements_table';
 
 function ap_admin_actions_register_menu() {
@@ -21,26 +21,24 @@ function ap_admin_actions_register_menu() {
 
 add_action('admin_menu', 'ap_admin_actions_register_menu');
 
+// Check if table with announcements exists id db, if not create one
 function create_announcements_table() {
     global $wpdb;
     global $table_name;
 
-    // Build the SQL query to check if the table exists
+    // Check if table already exists
     $query = "SHOW TABLES LIKE '$table_name'";
-
-    // Execute the query and get the results
     $results = $wpdb->get_results($query);
 
-    // Check if any rows were returned
-    if(count($results) > 0) {
-        echo 'Table exists.';
-    } else {
+    if(count($results) == 0) {
         // Create table with announcements
         $query = "CREATE TABLE $table_name (
         id int(11) NOT NULL AUTO_INCREMENT,
         name varchar(255) NOT NULL,
         content varchar(1000),
         date_post date,
+        times_to_show int(11),
+        times_shown int(11),
         PRIMARY KEY (id)
         );";
 
@@ -48,18 +46,18 @@ function create_announcements_table() {
     }
 }
 
+// Get all announcements from db
 function get_announcements() {
     global $wpdb;
     global $table_name;
 
-    // Build the SQL query to select all rows from the table
     $query = "SELECT * FROM $table_name";
-
     $results = $wpdb->get_results($query, ARRAY_A);
 
     return $results;
 }
 
+// Delete announcement with given id from db
 function delete_announcement($id_announcement) {
     global $wpdb;
     global $table_name;
@@ -67,7 +65,8 @@ function delete_announcement($id_announcement) {
     $wpdb->delete($table_name, array('id' => $id_announcement));
 }
 
-function update_announcement($id_announcement, $name, $content) {
+// Update announcement with given id
+function update_announcement($id_announcement, $name, $content, $times_to_show, $times_shown) {
     global $wpdb;
     global $table_name;
 
@@ -75,21 +74,17 @@ function update_announcement($id_announcement, $name, $content) {
         'id' => $id_announcement,
         'name' => $name,
         'content' => $content,
-        'date_post' => date('Ymd')
+        'date_post' => date('Ymd'),
+        'times_to_show' => $times_to_show,
+        'times_shown' => $times_shown
     );
 
-    // Execute the insert query
     $wpdb->replace($table_name, $data);
 }
 
 function ap_admin_page() {
-    // get _POST variable from globals
     global $_POST;
-
-    // Get a reference to the global $wpdb object
     global $wpdb;
-
-    // Get global table name
     global $table_name;
 
     create_announcements_table();
@@ -98,8 +93,9 @@ function ap_admin_page() {
     $announcment_type = 'Create';
     $announcment_name = '';
     $announcment_content = '';
+    $announcment_times_to_show = 0;
 
-    // process changes from form changing days
+    // Process changes from form (information for how many days announcement is considered valid)
     if(isset($_POST['ap_do_change'])) {
         if($_POST['ap_do_change'] == 'Y') {
             $apDays = $_POST['ap_days'];
@@ -109,36 +105,38 @@ function ap_admin_page() {
         }
     }
 
-    // create new announcement
+    // Create new announcement or edit existing one
     if(isset($_POST['ap_announcment_create'])) {
         if($_POST['ap_announcment_create'] == 'Create') {
-            // Define the data to insert
+
             $data = array(
                 'name' => $_POST['ap_announcment_name'],
                 'content' => $_POST['my_editor_id'],
-                'date_post' => date('Ymd')
+                'date_post' => date('Ymd'),
+                'times_to_show' => $_POST['ap_announcment_times_to_show'],
+                "times_shown" => 0
             );
 
-            // Execute the insert query
             $wpdb->insert($table_name, $data);
 
             echo '<div class="notice notice-success is dismissible"><p>Announcment created.</p></div>';
         }
         else {
-            update_announcement($_POST['ap_announcment_id'], $_POST['ap_announcment_name'], $_POST['my_editor_id']);
+            update_announcement($_POST['ap_announcment_id'], $_POST['ap_announcment_name'], $_POST['my_editor_id'],
+                $_POST['ap_announcment_times_to_show'], 0);
 
             echo '<div class="notice notice-success is dismissible"><p>Announcment edited.</p></div>';
         }
     }
 
-    // delete announcement
+    // Delete announcement
     if(isset($_POST['delete_change'])) {
         delete_announcement($_POST['delete_change']);
 
         echo '<div class="notice notice-success is dismissible"><p>Announcment deleted.</p></div>';
     }
 
-    // prepare to edit announcement
+    // Prepare to edit announcement
     if(isset($_POST['edit_change'])) {
         $announcments = get_announcements();
 
@@ -148,15 +146,16 @@ function ap_admin_page() {
                 $announcment_name = $row['name'];
                 $announcment_content = stripslashes($row['content']);
                 $announcment_id = $row['id'];
+                $announcment_times_to_show = $row['times_to_show'];
             }
         }
     }
 
-    // read current option value
+    // Read current option value
     $apDays = get_option('ap_days');
     $announcments = get_announcements();
 
-    //display admin page
+    // Display admin page
     ?>
     <div class="wrap">
         <h1>Announcement Plugin</h1>
@@ -183,16 +182,18 @@ function ap_admin_page() {
                 <p class="form_text">Announcment name:
                     <input type="text" name="ap_announcment_name" value="<?php echo $announcment_name ?>" size="100" required>
                 </p>
+
+                <p class="form_text">How many times to show announcment:
+                    <input type="number" name="ap_announcment_times_to_show" min="0" max="300000" value="<?php echo $announcment_times_to_show ?>" size="100" required>
+                </p>
                 
                 <?php
-                    // Set up the editor arguments
                     $editor_args = array(
                         'textarea_name' => 'my_editor_id',
                         'media_buttons' => true,
                         'textarea_rows' => 10,
                     );
 
-                    // Output the editor
                     wp_editor($announcment_content, 'my_editor_id', $editor_args);
                 ?>
                 <div class="centered_btn">
@@ -209,6 +210,8 @@ function ap_admin_page() {
                     <th>Id</th>
                     <th>Name</th>
                     <th>Date of post</th>
+                    <th>Times to show</th>
+                    <th>Times shown</th>
                     <th></th>
                     <th></th>
                 </tr>
@@ -221,6 +224,8 @@ function ap_admin_page() {
                             <td><?php echo $row['id'] ?></td>
                             <td><?php echo $row['name'] ?></td>
                             <td><?php echo $row['date_post'] ?></td>
+                            <td><?php echo $row['times_to_show'] ?></td>
+                            <td><?php echo $row['times_shown'] ?></td>
                             <td>
                                 <form name="edit_form" method="post">
                                     <input type="hidden" name="edit_change" value="<?php echo $row['id'] ?>">
@@ -243,44 +248,22 @@ function ap_admin_page() {
     <?php
 }
 
-function add_random_current_announcment($title) {
-    $announcements = get_announcements();
-    $current_announcements = array();
-
-    //get current date
-    $now = date('Ymd');
-    //get setting for how long post is a new post
-    $apDays = get_option('ap_days');
-
-    foreach($announcements as $row) {
-        $date = get_the_date('Ymd', $row['date_post']);
-        $current_announcements;
-
-        //generate proper post title
-        if($now - $date <= $apDays) {
-            $current_announcements[] = $row;
-        }
-    }
-}
-
 function ap_announcement_managment($content) {
 
     if ( is_single() ) {
         $announcements = get_announcements();
         $current_announcements = array();
 
-        //get current date
+        // get current date
         $now = date('Ymd');
-        //get setting for how long post is a new post
+        // get setting for how long announcement is showing
         $apDays = get_option('ap_days');
 
         foreach($announcements as $row) {
-//            $date = get_the_date('Y-m-d', $row['date_post']);
             $date = date('Ymd', strtotime($row['date_post']));
-            $content = $date . $content;
 
-            //generate proper post title
-            if($now - $date <= $apDays) {
+            // check if announcement is current
+            if($now - $date <= $apDays && $row['times_shown'] < $row['times_to_show']) {
                 $current_announcements[] = $row;
             }
         }
@@ -289,30 +272,16 @@ function ap_announcement_managment($content) {
 
         if (count($current_announcements) != 0) {
             $announcement_drawn = $current_announcements[0]['content'];
-            $announcement_drawn= stripslashes($announcement_drawn);
+            $announcement_drawn = stripslashes($announcement_drawn);
             $content = $announcement_drawn.$content;
+            update_announcement($current_announcements[0]['id'], $current_announcements[0]['name'],
+                $current_announcements[0]['content'], $current_announcements[0]['times_to_show'],
+                ($current_announcements[0]['times_shown'] + 1));
         }
     }
 
     return $content;
 }
-
-//function ap_announcement_managment($content) {
-//
-//    if ( is_single() ) {
-//        $announcements = get_announcements();
-//        shuffle( $announcements );
-//
-//        if (count($announcements) != 0) {
-//            $announcement_drawn = $announcements[0]['content'];
-//            $announcement_drawn= stripslashes($announcement_drawn);
-//            $content = $announcement_drawn.$content;
-//        }
-//    }
-//
-//    return $content;
-//}
-
 
 add_filter('the_content', "ap_announcement_managment");
 
