@@ -1,0 +1,44 @@
+.form_text {
+    font-size: 14px;
+}
+
+.ap_table {
+    background-color: white;
+    border-color: #767676;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.btn_ap {
+    background-color: #2271b1;
+    color: white;
+    border-color: #2271b1;
+    padding: 5px 20px;
+    border-radius: 4px;
+}
+
+.btn_ap:hover {
+    background-color: #135e96;
+    border-color: #135e96;
+    cursor: pointer;
+}
+
+th, td {
+    text-align: left;
+    padding: 10px;
+    font-size: 14px;
+}
+
+.centered_btn {
+    text-align: center;
+    padding: 20px;
+}
+
+.btn_change_days {
+    margin-left: 40px;
+}
+
+.announcement {
+    width: 80%;
+    text-align: center;
+}
